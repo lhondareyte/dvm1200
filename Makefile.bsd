@@ -1,6 +1,0 @@
-PROG=	dvm1200
-SRCS!=	ls *.c
-CFLAGS+=	-I/usr/local/include -Wall
-#LDFLAGS+=	-lfluidsynth -L/usr/local/lib -lncurses -lsqlite3
-
-.include <bsd.prog.mk>
