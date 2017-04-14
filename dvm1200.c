@@ -1,5 +1,5 @@
 /*
- * Copyright (c)2016,  Luc Hondareyte <lhondareyte_AT_laposte.net>.
+ * Copyright (c)2017,  Luc Hondareyte <lhondareyte_AT_laposte.net>.
  * All rights reserved.
  *   
  * Redistribution and use in source and binary forms, with or without 
@@ -35,15 +35,58 @@
 #include <termios.h>
 #include <unistd.h>
 
+#ifndef clear_bit
+ #define clear_bit(value,bit)	( value &= ~(1<<bit))
+#endif
+
+#ifndef bit_is_set
+ #define bit_is_set(var,pos) ((var) & (1<<(pos)))
+#endif
+
+extern char d_decode(char);
+extern void u_decode(uint8_t, uint8_t, uint8_t);
+
+#if defined (__FreeBSD__)
+#define 	DEFAULT_PORT	"/dev/cuaU0"
+#endif
+
+#if defined (__NetBSD__)
+#define 	DEFAULT_PORT	"/dev/ttyU0"
+#endif
+
+#if defined (Linux)
+#define 	DEFAULT_PORT	"/dev/ttyUSB0"
+#endif
+
+#if defined (__APPLE__)
+#define 	DEFAULT_PORT	"/dev/usbserial1"
+#endif
+
 #define MASK 0xf0
 
-struct termios tty;
-int count=0;
+#include <sys/time.h>
+char            t_fmt[64], t_buf[64];
+struct timeval  tv;
+struct tm       *tm;
+
+
+struct	termios tty;
+int	count=0;
+int	fd=0;
+
+void get_time(void) {
+	gettimeofday(&tv, NULL);
+	if((tm = localtime(&tv.tv_sec)) != NULL)
+	{
+		strftime(t_fmt, sizeof t_fmt, "%Y-%m-%d , %H:%M:%S ,", tm);
+		snprintf(t_buf, sizeof t_buf, t_fmt, tv.tv_usec);
+	}
+}
 
 int set_interface_attribs(int fd, int speed)
 {
 	if (tcgetattr(fd, &tty) < 0) {
-		printf("Error from tcgetattr: %s\n", strerror(errno));
+		fprintf(stderr, "Error from tcgetattr: %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -63,50 +106,40 @@ int set_interface_attribs(int fd, int speed)
 	tty.c_cc[VMIN] = 1;
 
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		printf("Error from tcsetattr: %s\n", strerror(errno));
+		fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
 		return -1;
 	}
 	return 0;
 }
 
 
-int decode_packet(char *p)
-{
-	char flag=p[0];
-	flag &= ~(MASK);
-	switch (flag)
-	{
-		case bla: break;
-		case blu: break;
-
-	}
-
-
-}
-
 int main(void)
 {
-	char *portname = "/dev/cuaU0";
-	int fd, rdlen;
-	unsigned char buf[80];
-	unsigned char p_buf[80];
+	char *portname = DEFAULT_PORT;
+	int rdlen=0;			
+	int i=0;			// loop variable
+	uint8_t  buf[80];
+	uint8_t p_buf[80];
 
 	fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
-		printf("Error opening %s: %s\n", portname, strerror(errno));
+		fprintf (stderr, "Error opening %s: %s\n", portname, strerror(errno));
 		return -1;
 	}
 
 	/*baudrate 2400, 8 bits, no parity, 1 stop bit */
 	set_interface_attribs(fd, B2400);
 
+	/* Unbuffered for stdout */
+	setvbuf(stdout, (char*)NULL, _IONBF, 0);
+
 	/* Waiting for 0xf1 : the last byte from last packet */
-	fprintf (stderr,"Waiting the end of last packet... ");
+	fprintf (stderr, "Waiting the end of last packet... ");
 	while(1)
 	{
 		rdlen = read(fd, buf, sizeof(buf) - 1);
 		if ( rdlen == 1 && buf[0] == 0xf1 ) {
-			fprintf(stdout, "ok\n");
+			fprintf(stderr, "ok\n");
 			break;
 		}
 	}
@@ -114,11 +147,11 @@ int main(void)
 	/* Now, we get 15 characters at a time */
 	tty.c_cc[VMIN] = 15;
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		printf("Error from tcsetattr: %s\n", strerror(errno));
+		fprintf (stderr, "Error from tcsetattr: %s\n", strerror(errno));
 		return -1;
 	}
-	memset ( buf, '\0', sizeof buf);
-	memset ( p_buf, '\0', sizeof p_buf);
+	memset ( buf, 0, sizeof buf);
+	memset ( p_buf, 0, sizeof p_buf);
 
 	/* Main loop */
 	while(1)
@@ -127,18 +160,60 @@ int main(void)
 		if (rdlen > 0) {
 			if (memcmp(p_buf, buf, rdlen) != 0)
 			{
+				get_time();
 				count++;
 				memcpy(p_buf, buf, rdlen);
-				unsigned char   *p;
-				printf("%05d : Read %d:", count, rdlen);
-				for (p = buf; rdlen-- > 0; p++)
-					printf(" 0x%x", *p);
-				printf("\n");
+#ifndef __DEBUG_DVM__
+				// Print sequence number and time for each line
+				fprintf(stdout, "%05d , %s ", count, t_buf);
+#endif
+				// Check buffer consistency and remove MSB
+				for ( i=0; i< rdlen; i++) {
+					uint8_t j=0;
+					j = buf[i]; 
+					j = j>>4;
+					if ( j != i+1 ) {
+						fprintf(stdout, "\nSequence error in buffer!!\n");
+					       	exit(-1);
+					}
+					buf[i] &= 0x0f;
+				}
+				// Decode numbers
+				uint8_t c=0;
+#if defined (__DEBUG_DVM__)
+				// Debug dvm1200 output
+				for ( i=1; i<15; i+=2 ) {
+					c=(buf[i]<<4)+(buf[i+1]);
+					fprintf(stdout, " %x", c);
+				}
+				fprintf(stdout, " : ");
+#endif
+				for ( i=1; i<9; i+=2 ) {
+					c=(buf[i]<<4)+(buf[i+1]);
+					// Checking for dot or minus sign
+					if (bit_is_set(c,4)) {
+						clear_bit(c,4);
+						// Minus sign at the left
+						if (i < 3 )
+							fprintf(stdout, "-%c",d_decode(c));
+						// Dot sign at the left
+						else fprintf(stdout, ".%c",d_decode(c));
+					} else {
+						fprintf(stdout, "%c",d_decode(c));
+					}
+				}
+				fprintf(stdout, " , ");
+				// Decode scaling and units
+				u_decode( (buf[9]<<4)+(buf[10]), (buf[11]<<4)+(buf[12]), (buf[13]<<4)+(buf[14]) );
+				fprintf(stdout, " , \n");
 			}
-		} else if (rdlen < 0) {
-			printf("Error from read: %d: %s\n", rdlen, strerror(errno));
+		} else {
+			fprintf(stderr, "Error from read: %d: %s\n", rdlen, strerror(errno));
+			close(fd);
+			exit (-1);
 		}
 	}
+	close(fd);
 	return 0;
 }
 

@@ -1,3 +1,12 @@
+The Velleman DVM1200 is a cheap DM with usb interface. There are many clones
+from china sources. This utility read data from USB interface and convert to
+CSV format. It's an adaptation from Sabin Iacob's DVM1200.py available at
+https://gist.github.com/m0n5t3r/4543215.
+
+This program has no dependency and should compile properly on any *NIX system.
+On macOS, you should have a driver for pl2303 from Prolific installed to works properly.
+
+The following documentation is from Sabin Iacob
 The multimeter is as dumb as they come when it comes to PC interfacing,
 and makes a screen dump to USB (over an IR link) instead of providing proper
 ASCII data. The original software is Windows only and doesn't work in Wine.
