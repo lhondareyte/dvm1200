@@ -34,6 +34,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #ifndef clear_bit
  #define clear_bit(value,bit)	( value &= ~(1<<bit))
@@ -118,17 +119,68 @@ int set_interface_attribs(int fd, int speed)
 }
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	char *portname = DEFAULT_PORT;
-	int rdlen=0;			
 	int i=0;			// loop variable
+
+	// For parsing command line
+	char *device = DEFAULT_PORT;
+	int interval = 0;
+	int limit = 0;
+	int rflag = 0;
+	int c;
+	opterr = 0;
+
+
+	// Checking command line options
+	if ( argc > 1 ) {
+		/*
+		   -d device
+		   -i interval
+		   -r (relative time)
+		   -c count limit
+		 */
+		while (( c = getopt (argc, argv, "d:i:ru:v" )) != -1 )
+			switch (c) {
+				case 'v':
+					fprintf ( stderr, "This option should print version number\n");
+					return 0;
+				case 'd': 
+					device = optarg; 
+					break;
+				case 'i': 
+					interval = atoi(optarg); 
+					if ( ! isnumber(interval) ) {
+						fprintf (stderr ,"Error : %s is not a number.\n", optarg);
+						return -1;
+					}
+					break;
+				case 'r': 
+					rflag = 1; 
+					break;
+				case 'c': 
+					limit = atoi(optarg); 
+					if ( ! isnumber(limit) ) {
+						fprintf (stderr ,"Error : %s is not a number.\n", optarg);
+						return -1;
+					}
+					break;
+				case '?':
+					fprintf ( stderr, "Usage : %s [-d device] [-i interval] [-c count] [-r ]\n", argv[0]);
+					return 1;
+				default:
+					abort();
+			}
+	
+	}
+	
+	int rdlen=0;			
 	uint8_t  buf[80];
 	uint8_t p_buf[80];
 
-	fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
+	fd = open(device, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
-		fprintf (stderr, "Error opening %s: %s\n", portname, strerror(errno));
+		fprintf (stderr, "Error opening %s: %s\n", device, strerror(errno));
 		return -1;
 	}
 
