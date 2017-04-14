@@ -43,7 +43,7 @@
  #define bit_is_set(var,pos) ((var) & (1<<(pos)))
 #endif
 
-extern char d_decode(char);
+extern char d_decode(uint8_t);
 extern void u_decode(uint8_t, uint8_t, uint8_t);
 
 #if defined (__FreeBSD__)
@@ -60,6 +60,11 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
 
 #if defined (__APPLE__)
 #define 	DEFAULT_PORT	"/dev/usbserial1"
+#endif
+
+#if defined (__REPLEO_DRIVER__)
+#undef 		DEFAULT_PORT
+#define 	DEFAULT_PORT	"/dev/cu.Repleo-PL2303-00008114"
 #endif
 
 #define MASK 0xf0

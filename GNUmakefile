@@ -14,8 +14,9 @@ OSNAME        = $(shell uname)
 ARCH          = $(shell uname -m)
 GIT_VERSION   = $(shell git describe --tags)
 GIT_YEAR      = $(shell git log -1 --format=%cd | cut -d' ' -f5)
-CFLAGS	      += -DVERSION=\"$(GIT_VERSION)\"
-CFLAGS	      += -DYEAR=\"$(GIT_YEAR)\"
+#CFLAGS	      += -DVERSION=\"$(GIT_VERSION)\"
+#CFLAGS	      += -DVERSION=\"$(GIT_VERSION)\"
+#CFLAGS	      += -D __DEBUG_DVM__ -D __REPLEO_DRIVER__
 
 PRG=dvm1200
 
