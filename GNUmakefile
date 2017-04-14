@@ -34,3 +34,9 @@ clean:
 	@printf "Compiling $<:"
 	@$(CC) $(CFLAGS) -Os -c $< -o $@
 	@printf "\tdone.\n"
+
+install:
+	@printf "Installing $(PRG)"
+	@install -m 755 $(PRG) /usr/local/bin/$(PRG)
+	@install -m 644 $(PRG).1 /usr/local/man/man1/
+	@printf "\tdone.\n"
