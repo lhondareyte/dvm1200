@@ -60,12 +60,11 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
 #endif
 
 #if defined (__APPLE__)
-#define 	DEFAULT_PORT	"/dev/usbserial1"
-#endif
-
-#if defined (__REPLEO_DRIVER__)
-#undef 		DEFAULT_PORT
-#define 	DEFAULT_PORT	"/dev/cu.Repleo-PL2303-00008114"
+ #if defined (__REPLEO_DRIVER__)
+ #define 	DEFAULT_PORT	"/dev/cu.Repleo-PL2303-00008114"
+ #else
+ #define 	DEFAULT_PORT	"/dev/cu.usbserial"
+ #endif
 #endif
 
 #define MASK 0xf0
@@ -92,7 +91,7 @@ void get_time(void) {
 int set_interface_attribs(int fd, int speed)
 {
 	if (tcgetattr(fd, &tty) < 0) {
-		fprintf(stderr, "Error from tcgetattr: %s\n", strerror(errno));
+		fprintf(stderr, "Error : tcgetattr() : %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -112,7 +111,7 @@ int set_interface_attribs(int fd, int speed)
 	tty.c_cc[VMIN] = 1;
 
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		fprintf(stderr, "Error from tcsetattr: %s\n", strerror(errno));
+		fprintf(stderr, "Error : tcsetattr() : %s\n", strerror(errno));
 		return -1;
 	}
 	return 0;
@@ -178,17 +177,17 @@ int main(int argc, char *argv[])
 	uint8_t  buf[80];
 	uint8_t p_buf[80];
 
+	/* Unbuffered for stdout */
+	setvbuf(stdout, (char*)NULL, _IONBF, 0);
+
 	fd = open(device, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
-		fprintf (stderr, "Error opening %s: %s\n", device, strerror(errno));
+		fprintf (stderr, "Error : Cannot open %s: %s\n", device, strerror(errno));
 		return -1;
 	}
 
 	/*baudrate 2400, 8 bits, no parity, 1 stop bit */
 	set_interface_attribs(fd, B2400);
-
-	/* Unbuffered for stdout */
-	setvbuf(stdout, (char*)NULL, _IONBF, 0);
 
 	/* Waiting for 0xf1 : the last byte from last packet */
 	fprintf (stderr, "Waiting the end of last packet... ");
@@ -204,7 +203,7 @@ int main(int argc, char *argv[])
 	/* Now, we get 15 characters at a time */
 	tty.c_cc[VMIN] = 15;
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		fprintf (stderr, "Error from tcsetattr: %s\n", strerror(errno));
+		fprintf (stderr, "Error : tcsetattr() : %s\n", strerror(errno));
 		return -1;
 	}
 	memset ( buf, 0, sizeof buf);
@@ -265,7 +264,7 @@ int main(int argc, char *argv[])
 				fprintf(stdout, " , \n");
 			}
 		} else {
-			fprintf(stderr, "Error from read: %d: %s\n", rdlen, strerror(errno));
+			fprintf(stderr, "Error : read() %d : %s\n", rdlen, strerror(errno));
 			close(fd);
 			exit (-1);
 		}
