@@ -27,10 +27,10 @@
  *
  */
 
-#include <errno.h>
-#include <fcntl.h> 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h> 
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
@@ -67,7 +67,7 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
  #endif
 #endif
 
-#define MASK 0xf0
+char *device = DEFAULT_PORT;
 
 #include <sys/time.h>
 char            t_fmt[64], t_buf[64];
@@ -91,7 +91,7 @@ void get_time(void) {
 int set_interface_attribs(int fd, int speed)
 {
 	if (tcgetattr(fd, &tty) < 0) {
-		fprintf(stderr, "Error : tcgetattr() : %s\n", strerror(errno));
+		fprintf(stderr, "Error : %s : %s.\n", device, strerror(errno));
 		return -1;
 	}
 
@@ -110,8 +110,8 @@ int set_interface_attribs(int fd, int speed)
 	tty.c_cc[VTIME] = 0;
 	tty.c_cc[VMIN] = 1;
 
-	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		fprintf(stderr, "Error : tcsetattr() : %s\n", strerror(errno));
+	if (tcsetattr(fd, TCSANOW, &tty) < 0) {
+		fprintf(stderr, "Error : %s : %s.\n", device, strerror(errno));
 		return -1;
 	}
 	return 0;
@@ -123,7 +123,6 @@ int main(int argc, char *argv[])
 	int i=0;			// loop variable
 
 	// For parsing command line
-	char *device = DEFAULT_PORT;
 	int interval = 0;
 	int limit = 0;
 	int rflag = 0;
@@ -133,12 +132,10 @@ int main(int argc, char *argv[])
 
 	// Checking command line options
 	if ( argc > 1 ) {
-		/*
-		   -d device
+		/* -d device
 		   -i interval
 		   -r (relative time)
-		   -c count limit
-		 */
+		   -c count limit */
 		while (( c = getopt (argc, argv, "d:i:ru:v" )) != -1 )
 			switch (c) {
 				case 'v':
@@ -150,7 +147,7 @@ int main(int argc, char *argv[])
 				case 'i': 
 					interval = atoi(optarg); 
 					if ( ! isnumber(interval) ) {
-						fprintf (stderr ,"Error : %s is not a number.\n", optarg);
+						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
 						return -1;
 					}
 					break;
@@ -160,7 +157,7 @@ int main(int argc, char *argv[])
 				case 'c': 
 					limit = atoi(optarg); 
 					if ( ! isnumber(limit) ) {
-						fprintf (stderr ,"Error : %s is not a number.\n", optarg);
+						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
 						return -1;
 					}
 					break;
@@ -182,12 +179,15 @@ int main(int argc, char *argv[])
 
 	fd = open(device, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
-		fprintf (stderr, "Error : Cannot open %s: %s\n", device, strerror(errno));
+		fprintf (stderr, "Error : %s : %s.\n", device, strerror(errno));
 		return -1;
 	}
 
 	/*baudrate 2400, 8 bits, no parity, 1 stop bit */
-	set_interface_attribs(fd, B2400);
+	if ( set_interface_attribs(fd, B2400) < 0 ) {
+		close(fd);
+		exit (1);
+	}
 
 	/* Waiting for 0xf1 : the last byte from last packet */
 	fprintf (stderr, "Waiting the end of last packet... ");
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 	/* Now, we get 15 characters at a time */
 	tty.c_cc[VMIN] = 15;
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-		fprintf (stderr, "Error : tcsetattr() : %s\n", strerror(errno));
+		fprintf (stderr, "Error : %s : %s.\n", device, strerror(errno));
 		return -1;
 	}
 	memset ( buf, 0, sizeof buf);
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 				fprintf(stdout, " , \n");
 			}
 		} else {
-			fprintf(stderr, "Error : read() %d : %s\n", rdlen, strerror(errno));
+			fprintf(stderr, "Error : %s : %s.\n", device, strerror(errno));
 			close(fd);
 			exit (-1);
 		}
