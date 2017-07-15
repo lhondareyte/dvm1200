@@ -4,17 +4,15 @@ The Velleman DVM1200 is a cheap digital multimeter (DM) with usb interface. Ther
 
 It's an adaptation from Sabin Iacob's DVM1200.py available at https://gist.github.com/m0n5t3r/4543215. 
 
-This program has no dependency and should works on any *NIX system with USB support.
+This utility has no dependency and should works on any *NIX system with USB support.
 
 ## Installation : 
-The DM interface is based on a PL2303 chip from PROLIFIC. The driver is available with any Linux distributions and all *BSD.  On macOS, you must install the driver from PROLIFIC. Note that this driver can be buggy: I recommend pl2303 driver from REPLEO but it's not free.
 To install the utility, type:
 ```sh
 make && make install
 dvm1200
 ```
 See the man page for all the availables options.
-**Important: You must have permissions to access the serial port.
 
 ## How it works :
 The following documentation is mostly taken from Sabin Iacob's dvm1200.py:
@@ -39,5 +37,10 @@ These encode various things on the screen; in order of appearance:
 The last half byte looks like [MIN, <no idea>, deg.C, MAX]. The digits use a
 non-standard layout (check decode_digit), but are basically seven segment
 displays; the "decimal point" bit of the leftmost digit controls the sign display.
-## License
+
+## Notes :
+The DM interface is based on a PL2303 chip from PROLIFIC. The driver is available with any Linux distributions and all *BSD.  On macOS, you must install the driver from PROLIFIC. Note that this driver can be buggy: I recommend pl2303 driver from REPLEO but it's not free.
+**Important: You must have permissions to access the serial port.
+
+## License :
 This program is released under the BSD license.
