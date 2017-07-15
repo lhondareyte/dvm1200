@@ -12,6 +12,8 @@ To install the utility, type:
 make && make install
 dvm1200
 ```
+Warning, You must have permissions to access the serial port.
+
 See the man page for all the availables options.
 
 ## How it works :
@@ -40,7 +42,6 @@ displays; the "decimal point" bit of the leftmost digit controls the sign displa
 
 ## Notes :
 The DM interface is based on a PL2303 chip from PROLIFIC. The driver is available with any Linux distributions and all *BSD.  On macOS, you must install the driver from PROLIFIC. Note that this driver can be buggy: I recommend pl2303 driver from REPLEO but it's not free.
-**Important: You must have permissions to access the serial port.
 
 ## License :
 This program is released under the BSD license.
