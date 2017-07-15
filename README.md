@@ -39,5 +39,5 @@ These encode various things on the screen; in order of appearance:
 The last half byte looks like [MIN, <no idea>, deg.C, MAX]. The digits use a
 non-standard layout (check decode_digit), but are basically seven segment
 displays; the "decimal point" bit of the leftmost digit controls the sign display.
-## Licence
-This program is released under the BSD licence.
+## License
+This program is released under the BSD license.
