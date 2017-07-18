@@ -33,8 +33,11 @@
 #include <fcntl.h> 
 #include <string.h>
 #include <termios.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <time.h>
+#include <sys/time.h>
 
 #ifndef clear_bit
  #define clear_bit(value,bit)	( value &= ~(1<<bit))
@@ -55,7 +58,7 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
 #define 	DEFAULT_PORT	"/dev/ttyU0"
 #endif
 
-#if defined (Linux)
+#if defined (__linux__)
 #define 	DEFAULT_PORT	"/dev/ttyUSB0"
 #endif
 
@@ -69,7 +72,6 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
 
 char *device = DEFAULT_PORT;
 
-#include <sys/time.h>
 char            t_fmt[64], t_buf[64];
 struct timeval  tv;
 struct tm       *tm;
@@ -125,7 +127,7 @@ int main(int argc, char *argv[])
 	// For parsing command line
 	int interval = 0;
 	int limit = 0;
-	int rflag = 0;
+	// int rflag = 0;
 	int c;
 	opterr = 0;
 
@@ -146,17 +148,17 @@ int main(int argc, char *argv[])
 					break;
 				case 'i': 
 					interval = atoi(optarg); 
-					if ( ! isnumber(interval) ) {
+					if ( ! isdigit(interval) ) {
 						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
 						return -1;
 					}
 					break;
 				case 'r': 
-					rflag = 1; 
+					// rflag = 1; 
 					break;
 				case 'c': 
 					limit = atoi(optarg); 
-					if ( ! isnumber(limit) ) {
+					if ( ! isdigit(limit) ) {
 						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
 						return -1;
 					}
