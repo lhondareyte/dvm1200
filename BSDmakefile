@@ -1,4 +1,4 @@
-CC    = gcc
+CC    = cc
 PROG=	dvm1200
 SRCS!=	ls *.c
 
