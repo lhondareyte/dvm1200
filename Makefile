@@ -6,6 +6,7 @@ PRG	= dvm1200
 SOURCES	= decode.c dvm1200.c
 OBJECTS	= decode.o dvm1200.o
 
+all: $(PRG)
 
 $(PRG): $(OBJECTS)
 	@printf "Linking   $@:"
