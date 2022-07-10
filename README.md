@@ -44,4 +44,4 @@ displays; the "decimal point" bit of the leftmost digit controls the sign displa
 The DM interface is based on a PL2303 chip from PROLIFIC. The driver is available with any Linux distributions and all *BSD.  On macOS, you must install the driver from PROLIFIC. Note that this driver can be buggy: I recommend pl2303 driver from REPLEO but it's not free.
 
 ## License :
-This program is released under the BSD license.
+This program is released under the MIT license.
