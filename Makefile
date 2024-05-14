@@ -1,7 +1,8 @@
 #
 #  $Id$
 # 
-CFLAGS	= -O2 -Wall -D  __DEBUG_DVM__
+#CFLAGS	= -O2 -Wall -D  __DEBUG_DVM__
+CFLAGS	= -O2 -Wall -pedantic -Werror
 PRG	= dvm1200
 SOURCES	= decode.c dvm1200.c
 OBJECTS	= decode.o dvm1200.o
