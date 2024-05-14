@@ -1,15 +1,29 @@
 .\" Manpage for dvm1200.
-.TH man 1 "14 April 2017" "1.0" "dvm1200 man page"
+.TH man 1 "14 May 2024" "1.1" "dvm1200 man page"
 .SH NAME
 dvm1200 \- Utility for Vellemann DVM1200 Digital Multimeter
+
 .SH SYNOPSIS
-dvm1200 [-d device] [-r] 
+.B dvm1200 
+.RB [-d\ \fBdevice]
+.RB [-c\ \fBcount] 
+
 .SH DESCRIPTION
-dvm1200 \- Utility for Vellemann DVM1200 (and clones) Digital Multimeters
-dvm1200 dump data from dvm1200 and convert it to CSV format.
+.I dvm1200
+is an open source tool to dump data from Velleman DVM and convert it to CSV format.
+
+
 .SH OPTIONS
+.TP
+.BR \-d\ \fI<device>
+specify serial port to connect
+.TP
+.BR \-c\ \fI<count>
+Specify count measurements before exit 
 
 .SH BUGS
-No known bugs.
+.TP
+If battery is low, the DVM1200 send erratic data.
+
 .SH AUTHOR
 Luc Hondareyte
