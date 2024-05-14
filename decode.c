@@ -1,23 +1,8 @@
 /*
  * Copyright (c) 2017 Luc Hondareyte
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * SPDX-License-Identifier: MIT
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #include <stdio.h>
@@ -27,9 +12,7 @@
 
 char d_decode(uint8_t d) {
 	char rc;
-	switch(d)
-	{
-
+	switch(d) {
 		// Numbers
 		case 0x0a: rc='1'; break;
 		case 0xad: rc='2'; break;
@@ -45,7 +28,7 @@ char d_decode(uint8_t d) {
 		default:   rc=1; break;
 	}
 	return rc;
-};
+}
 
 void u_decode(uint8_t s, uint8_t u, uint8_t x) {
 	// Temperature

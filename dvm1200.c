@@ -1,23 +1,8 @@
 /*
- * Copyright (c) 2017 Luc Hondareyte
+ * Copyright (c) 2017-2024 Luc Hondareyte
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * SPDX-License-Identifier: MIT
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #include <stdio.h>
@@ -43,41 +28,29 @@
 extern char d_decode(uint8_t);
 extern void u_decode(uint8_t, uint8_t, uint8_t);
 
-#if defined (__FreeBSD__)
-#define 	DEFAULT_PORT	"/dev/cuaU0"
-#endif
-
-#if defined (__NetBSD__)
-#define 	DEFAULT_PORT	"/dev/ttyU0"
-#endif
-
-#if defined (__linux__)
-#define 	DEFAULT_PORT	"/dev/ttyUSB0"
-#endif
-
 #if defined (__APPLE__)
- #if defined (__REPLEO_DRIVER__)
- #define 	DEFAULT_PORT	"/dev/cu.Repleo-PL2303-00008114"
- #else
  #define 	DEFAULT_PORT	"/dev/cu.usbserial"
- #endif
+#elif defined (__FreeBSD__)
+ #define 	DEFAULT_PORT	"/dev/cuaU0"
+#elif defined (__linux__)
+ #define 	DEFAULT_PORT	"/dev/ttyUSB0"
+#elif defined (__NetBSD__)
+ #define 	DEFAULT_PORT	"/dev/ttyU0"
+#elif defined (__OpenBSD__)
+ #define 	DEFAULT_PORT	"/dev/cuaU0"
 #endif
 
-char *device = DEFAULT_PORT;
-
-char            t_fmt[64], t_buf[64];
 struct timeval  tv;
 struct tm       *tm;
-
-
-struct	termios tty;
+struct termios tty;
+char *device = DEFAULT_PORT;
+char t_fmt[64], t_buf[64];
 int	count=0;
 int	fd=0;
 
 void get_time(void) {
 	gettimeofday(&tv, NULL);
-	if((tm = localtime(&tv.tv_sec)) != NULL)
-	{
+	if((tm = localtime(&tv.tv_sec)) != NULL) {
 		strftime(t_fmt, sizeof t_fmt, "%Y-%m-%d , %H:%M:%S ,", tm);
 		snprintf(t_buf, sizeof t_buf, t_fmt, tv.tv_usec);
 	}
@@ -112,60 +85,44 @@ int set_interface_attribs(int fd, int speed)
 	return 0;
 }
 
-
 int main(int argc, char *argv[])
 {
 	int i=0;			// loop variable
-
-	// For parsing command line
-	int interval = 0;
-	int limit = 0;
-	// int rflag = 0;
+	int maxcount = 0;
 	int c;
 	opterr = 0;
 
-
-	// Checking command line options
+	/* Checking command line options */
 	if ( argc > 1 ) {
 		/* -d device
-		   -i interval
-		   -r (relative time)
-		   -c count limit */
-		while (( c = getopt (argc, argv, "d:i:ru:v" )) != -1 )
+		   -c maxcount 
+		   */
+		while (( c = getopt (argc, argv, "d:c:hv" )) != -1 ) {
 			switch (c) {
-				case 'v':
-					fprintf ( stderr, "This option should print version number\n");
-					return 0;
 				case 'd': 
 					device = optarg; 
 					break;
-				case 'i': 
-					interval = atoi(optarg); 
-					if ( ! isdigit(interval) ) {
-						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
-						return -1;
-					}
-					break;
-				case 'r': 
-					// rflag = 1; 
-					break;
 				case 'c': 
-					limit = atoi(optarg); 
-					if ( ! isdigit(limit) ) {
+					maxcount = atoi(optarg); 
+					if ( isdigit(maxcount) ) {
 						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
 						return -1;
 					}
 					break;
-				case '?':
-					fprintf ( stderr, "Usage : %s [-d device] [-i interval] [-c count] [-r ]\n", argv[0]);
-					return 1;
+				case 'h':
+					fprintf ( stderr, "Usage : %s [-d device] [-c count] \n", argv[0]);
+					return 0;
+				case 'v':
+					fprintf ( stderr, "This option should print version number\n");
+					return 0;
 				default:
 					abort();
 			}
+		}
 	
 	}
 	
-	int rdlen=0;			
+	int rdlen;			
 	uint8_t  buf[80];
 	uint8_t p_buf[80];
 
@@ -184,10 +141,12 @@ int main(int argc, char *argv[])
 		exit (1);
 	}
 
+Restart:
 	/* Waiting for 0xf1 : the last byte from last packet */
+	rdlen=0;
+
 	fprintf (stderr, "Waiting the end of last packet... ");
-	while(1)
-	{
+	while(1) {
 		rdlen = read(fd, buf, sizeof(buf) - 1);
 		if ( rdlen == 1 && buf[0] == 0xf1 ) {
 			fprintf(stderr, "ok\n");
@@ -205,14 +164,15 @@ int main(int argc, char *argv[])
 	memset ( p_buf, 0, sizeof p_buf);
 
 	/* Main loop */
-	while(1)
-	{
+	while(1) {
 		rdlen = read(fd, buf, sizeof(buf) - 1);
 		if (rdlen > 0) {
 			if (memcmp(p_buf, buf, rdlen) != 0)
 			{
 				get_time();
 				count++;
+				if (( maxcount != 0 ) && ( count > maxcount ))
+					break;
 				memcpy(p_buf, buf, rdlen);
 #ifndef __DEBUG_DVM__
 				// Print sequence number and time for each line
@@ -224,8 +184,8 @@ int main(int argc, char *argv[])
 					j = buf[i]; 
 					j = j>>4;
 					if ( j != i+1 ) {
-						fprintf(stdout, "\nSequence error in buffer!!\n");
-					       	exit(-1);
+						fprintf(stderr, "\nSequence error in buffer!\n");
+					       	goto Restart;
 					}
 					buf[i] &= 0x0f;
 				}
@@ -267,4 +227,3 @@ int main(int argc, char *argv[])
 	close(fd);
 	return 0;
 }
-
