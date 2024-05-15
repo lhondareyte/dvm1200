@@ -6,6 +6,8 @@ CFLAGS	= -O2 -Wall -pedantic -Werror
 PRG	= dvm1200
 SOURCES	= decode.c dvm1200.c
 OBJECTS	= decode.o dvm1200.o
+BINDIR  = $(DESTDIR)$(PREFIX)/bin
+MANDIR  = $(DESTDIR)$(PREFIX)/share/man/man1
 
 all: $(PRG)
 
@@ -21,8 +23,8 @@ man:
 	@gzip -cn $(PRG).1 > $(PRG).1.gz
 
 install: man
-	install -m 755 -o root -g wheel $(PRG) /usr/local/bin
-	install -m 644 -o root -g wheel $(PRG).1.gz /usr/local/man/man1
+	install -m 755 -o root -g wheel $(PRG) $(BINDIR)
+	install -m 644 -o root -g wheel $(PRG).1.gz $(MANDIR)
 .c.o:
 	@printf "Compiling $<:"
 	@$(CC) $(CFLAGS) -Os -c $< -o $@
