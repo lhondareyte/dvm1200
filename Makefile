@@ -2,7 +2,8 @@
 #  $Id$
 # 
 #CFLAGS	= -O2 -Wall -D  __DEBUG_DVM__
-CFLAGS	= -O2 -Wall -pedantic -Werror
+CFLAGS	= -O2 -Wall -pedantic -Werror 
+LDFLAGS = -s
 PRG	= dvm1200
 SOURCES	= decode.c dvm1200.c
 OBJECTS	= decode.o dvm1200.o
@@ -23,8 +24,8 @@ man:
 	@gzip -cn $(PRG).1 > $(PRG).1.gz
 
 install: man
-	install -m 755 -o root -g wheel $(PRG) $(BINDIR)
-	install -m 644 -o root -g wheel $(PRG).1.gz $(MANDIR)
+	install -m 755 $(PRG) $(BINDIR)
+	install -m 644 $(PRG).1.gz $(MANDIR)
 .c.o:
 	@printf "Compiling $<:"
 	@$(CC) $(CFLAGS) -Os -c $< -o $@
