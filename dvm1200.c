@@ -5,17 +5,17 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h> 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <termios.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <ctype.h>
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #ifndef clear_bit
  #define clear_bit(value,bit)	( value &= ~(1<<bit))
@@ -48,7 +48,8 @@ char t_fmt[64], t_buf[64];
 int	count=0;
 int	fd=0;
 
-void get_time(void) {
+inline void get_time(void) 
+{
 	gettimeofday(&tv, NULL);
 	if((tm = localtime(&tv.tv_sec)) != NULL) {
 		strftime(t_fmt, sizeof t_fmt, "%Y-%m-%d , %H:%M:%S ,", tm);
@@ -87,27 +88,32 @@ int set_interface_attribs(int fd, int speed)
 
 int main(int argc, char *argv[])
 {
-	int i=0;			// loop variable
-	int maxcount = 0;
-	int c;
-	opterr = 0;
+	int i=0;                /* loop variable */
+	int maxcount = 0;       /* max read before exit */
+	int opt;                /* store arg */
+	int rc = EXIT_SUCCESS;  /* return code */
+	int rdlen;	            /* read lenght */
+	uint8_t  buf[80];       /* buffer */
+	uint8_t p_buf[80];      /* previous buffer */
+	uint8_t c=0;            /* store received byte */
+	uint8_t j=0;            /* store received byte to check bytes sequence */
 
+	opterr = 0;             /* disable getopt() abort message */
+	
 	/* Checking command line options */
 	if ( argc > 1 ) {
-		/* -d device
-		   -c maxcount 
-		   */
-		while (( c = getopt (argc, argv, "d:c:hv" )) != -1 ) {
-			switch (c) {
+		/* -d device -c maxcount */
+		while (( opt = getopt (argc, argv, "d:c:hv" )) != -1 ) {
+			switch (opt) {
 				case 'd': 
 					device = optarg; 
 					break;
 				case 'c': 
-					maxcount = atoi(optarg); 
-					if ( isdigit(maxcount) ) {
-						fprintf (stderr ,"Error : %s : not a number.\n", optarg);
-						return -1;
+					if ( ! isdigit(*optarg) ) {
+						fprintf (stderr ,"Error : not a number (%s).\n", optarg);
+						exit (EXIT_FAILURE);
 					}
+					maxcount = atoi(optarg); 
 					break;
 				case 'h':
 					fprintf ( stderr, "Usage : %s [-d device] [-c count] \n", argv[0]);
@@ -119,29 +125,25 @@ int main(int argc, char *argv[])
 					abort();
 			}
 		}
-	
 	}
 	
-	int rdlen;			
-	uint8_t  buf[80];
-	uint8_t p_buf[80];
 
 	/* Unbuffered for stdout */
 	setvbuf(stdout, (char*)NULL, _IONBF, 0);
 
+Restart:
 	fd = open(device, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
 		fprintf (stderr, "Error : %s : %s.\n", device, strerror(errno));
 		return -1;
 	}
 
-	/*baudrate 2400, 8 bits, no parity, 1 stop bit */
+	/* baudrate 2400 */
 	if ( set_interface_attribs(fd, B2400) < 0 ) {
 		close(fd);
 		exit (1);
 	}
 
-Restart:
 	/* Waiting for 0xf1 : the last byte from last packet */
 	rdlen=0;
 
@@ -167,32 +169,27 @@ Restart:
 	while(1) {
 		rdlen = read(fd, buf, sizeof(buf) - 1);
 		if (rdlen > 0) {
-			if (memcmp(p_buf, buf, rdlen) != 0)
-			{
+			if (memcmp(p_buf, buf, rdlen) != 0) {
 				get_time();
 				count++;
-				if (( maxcount != 0 ) && ( count > maxcount ))
-					break;
 				memcpy(p_buf, buf, rdlen);
 #ifndef __DEBUG_DVM__
-				// Print sequence number and time for each line
+				/* Print sequence number and time for each line */
 				fprintf(stdout, "%05d , %s ", count, t_buf);
 #endif
-				// Check buffer consistency and remove MSB
+				/* Check buffer consistency and remove MSB */
 				for ( i=0; i< rdlen; i++) {
-					uint8_t j=0;
 					j = buf[i]; 
 					j = j>>4;
 					if ( j != i+1 ) {
 						fprintf(stderr, "\nSequence error in buffer!\n");
+							close(fd);
 					       	goto Restart;
 					}
 					buf[i] &= 0x0f;
 				}
-				// Decode numbers
-				uint8_t c=0;
+				/* Decoding numbers */
 #if defined (__DEBUG_DVM__)
-				// Debug dvm1200 output
 				for ( i=1; i<15; i+=2 ) {
 					c=(buf[i]<<4)+(buf[i+1]);
 					fprintf(stdout, " %x", c);
@@ -201,29 +198,32 @@ Restart:
 #endif
 				for ( i=1; i<9; i+=2 ) {
 					c=(buf[i]<<4)+(buf[i+1]);
-					// Checking for dot or minus sign
+					/* Checking for dot or minus sign */
 					if (bit_is_set(c,4)) {
 						clear_bit(c,4);
-						// Minus sign at the left
+						/* Minus sign at the left */
 						if (i < 3 )
 							fprintf(stdout, "-%c",d_decode(c));
-						// Dot sign at the left
+						/* Dot sign at the left */ 
 						else fprintf(stdout, ".%c",d_decode(c));
 					} else {
 						fprintf(stdout, "%c",d_decode(c));
 					}
 				}
 				fprintf(stdout, " , ");
-				// Decode scaling and units
+				/* Decoding scales and units */
 				u_decode( (buf[9]<<4)+(buf[10]), (buf[11]<<4)+(buf[12]), (buf[13]<<4)+(buf[14]) );
 				fprintf(stdout, " , \n");
+				if ((maxcount != 0) && (maxcount >= count)) {
+					break;
+				}
 			}
 		} else {
 			fprintf(stderr, "Error : %s : %s.\n", device, strerror(errno));
-			close(fd);
-			exit (-1);
+			rc = EXIT_FAILURE;
+			break;
 		}
 	}
 	close(fd);
-	return 0;
+	exit(rc);
 }
