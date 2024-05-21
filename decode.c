@@ -5,15 +5,16 @@
  *
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <unistd.h>
 
-char d_decode(uint8_t d) {
+char d_decode(uint8_t d) 
+{
 	char rc;
 	switch(d) {
-		// Numbers
+		/* Numbers */ 
 		case 0x0a: rc='1'; break;
 		case 0xad: rc='2'; break;
 		case 0x8f: rc='3'; break;
@@ -30,13 +31,14 @@ char d_decode(uint8_t d) {
 	return rc;
 }
 
-void u_decode(uint8_t s, uint8_t u, uint8_t x) {
-	// Temperature
+void u_decode(uint8_t s, uint8_t u, uint8_t x) 
+{
+	/* Temperature */ 
 	if ( u == 0x00 ) {
 		if ( x == 0x21 ) fprintf(stdout, "C°");
 		if ( x == 0x11 ) fprintf(stdout, "F°");
 	} else {
-		// Scaling
+		/* Scaling */ 
 		switch (s) {
 			case 0x01: fprintf(stdout,"m"); break;
 			case 0x04: fprintf(stdout,"M"); break;
@@ -45,7 +47,7 @@ void u_decode(uint8_t s, uint8_t u, uint8_t x) {
 			case 0x20: fprintf(stdout,"n"); break;
 			case 0x40: fprintf(stdout,"K"); break;
 		}
-		// Units
+		/* Units */
 		switch (u) {
 			case 0x01: fprintf(stdout,"A"); break;
 			case 0x02: fprintf(stdout,"V"); break;
