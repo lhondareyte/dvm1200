@@ -135,13 +135,13 @@ Restart:
 	fd = open(device, O_RDWR | O_NOCTTY | O_SYNC);
 	if (fd < 0) {
 		fprintf (stderr, "Error : %s : %s.\n", device, strerror(errno));
-		return -1;
+		exit (EXIT_FAILURE);
 	}
 
 	/* baudrate 2400 */
 	if ( set_interface_attribs(fd, B2400) < 0 ) {
-		close(fd);
-		exit (1);
+		rc = EXIT_FAILURE;
+		goto End;
 	}
 
 	/* Waiting for 0xf1 : the last byte from last packet */
@@ -160,7 +160,8 @@ Restart:
 	tty.c_cc[VMIN] = 15;
 	if (tcsetattr(fd, TCSANOW, &tty) != 0) {
 		fprintf (stderr, "Error : %s : %s.\n", device, strerror(errno));
-		return -1;
+		rc = EXIT_FAILURE;
+		goto End;
 	}
 	memset ( buf, 0, sizeof buf);
 	memset ( p_buf, 0, sizeof p_buf);
@@ -224,6 +225,8 @@ Restart:
 			break;
 		}
 	}
+
+End:
 	close(fd);
 	exit(rc);
 }
