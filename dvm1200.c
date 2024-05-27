@@ -49,6 +49,11 @@ char t_fmt[64], t_buf[64];
 int	count=0;
 int	fd=0;
 
+static void usage(void) {
+	fprintf ( stderr, "Usage : dvm1200 [-d device] [-c count] [-u]\n");
+	exit (EXIT_FAILURE);
+}
+
 inline void get_time(void) 
 {
 	gettimeofday(&tv, NULL);
@@ -105,7 +110,7 @@ int main(int argc, char *argv[])
 	/* Checking command line options */
 	if ( argc > 1 ) {
 		/* -d device -c maxcount */
-		while (( opt = getopt (argc, argv, "d:c:hvu" )) != -1 ) {
+		while (( opt = getopt (argc, argv, "d:c:u" )) != -1 ) {
 			switch (opt) {
 				case 'd': 
 					device = optarg; 
@@ -117,21 +122,17 @@ int main(int argc, char *argv[])
 					}
 					maxcount = atoi(optarg); 
 					break;
-				case 'h':
-					fprintf ( stderr, "Usage : %s [-d device] [-c count] \n", argv[0]);
-					return 0;
-				case 'v':
-					fprintf ( stderr, "This option should print version number\n");
-					return 0;
 				case 'u':
 					uniq = true;
 					break;
 				default:
-					abort();
+					usage();
 			}
 		}
 	}
-	
+	if (optind < argc) {
+		usage();
+	}
 
 	/* Unbuffered for stdout */
 	setvbuf(stdout, (char*)NULL, _IONBF, 0);
@@ -192,7 +193,7 @@ Restart:
 					if ( j != i+1 ) {
 						fprintf(stderr, "\nSequence error in buffer!\n");
 						close(fd);
-					    goto Restart;
+					    	goto Restart;
 					}
 					buf[i] &= 0x0f;
 				}
@@ -227,7 +228,7 @@ Restart:
 				}
 			}
 		} else {
-			fprintf(stderr, "Error reading device %s!\n", device));
+			fprintf(stderr, "Error reading device %s!\n", device);
 			rc = EXIT_FAILURE;
 			break;
 		}
