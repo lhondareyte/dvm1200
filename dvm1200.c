@@ -15,6 +15,7 @@
 #include <termios.h>
 #include <time.h>
 #include <sys/time.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #ifndef clear_bit
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
 {
 	int i=0;                /* loop variable */
 	int maxcount = 0;       /* max read before exit */
+	bool uniq = false;      /* -u option (uniq) */
 	int opt;                /* store arg */
 	int rc = EXIT_SUCCESS;  /* return code */
 	int rdlen;	            /* read lenght */
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
 	/* Checking command line options */
 	if ( argc > 1 ) {
 		/* -d device -c maxcount */
-		while (( opt = getopt (argc, argv, "d:c:hv" )) != -1 ) {
+		while (( opt = getopt (argc, argv, "d:c:hvu" )) != -1 ) {
 			switch (opt) {
 				case 'd': 
 					device = optarg; 
@@ -121,6 +123,9 @@ int main(int argc, char *argv[])
 				case 'v':
 					fprintf ( stderr, "This option should print version number\n");
 					return 0;
+				case 'u':
+					uniq = true;
+					break;
 				default:
 					abort();
 			}
@@ -170,7 +175,10 @@ Restart:
 	while(1) {
 		rdlen = read(fd, buf, sizeof(buf) - 1);
 		if (rdlen > 0) {
-			if (memcmp(p_buf, buf, rdlen) != 0) {
+			if ((memcmp(p_buf, buf, rdlen) == 0) && ( uniq == true )) {
+				continue;
+			}
+			else {
 				get_time();
 				count++;
 				memcpy(p_buf, buf, rdlen);
