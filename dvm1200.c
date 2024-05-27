@@ -68,12 +68,12 @@ int set_interface_attribs(int fd, int speed)
 	cfsetospeed(&tty, (speed_t)speed);
 	cfsetispeed(&tty, (speed_t)speed);
 
-	tty.c_cflag &= ~( PARENB | CSTOPB | CRTSCTS );
-	tty.c_cflag |=  ( CSIZE | CS8 | CLOCAL | CREAD );
+	tty.c_cflag &= ~(PARENB|CSTOPB|CRTSCTS);
+	tty.c_cflag |=  (CSIZE|CS8|CLOCAL|CREAD );
 
 	/* non-canonical mode */
-	tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
-	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+	tty.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+	tty.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
 	tty.c_oflag &= ~OPOST;
 
 	/* One byte at a time on startup */
@@ -173,8 +173,7 @@ Restart:
 
 	/* Main loop */
 	while(1) {
-		rdlen = read(fd, buf, sizeof(buf) - 1);
-		if (rdlen > 0) {
+		if ((rdlen = read(fd, buf, sizeof(buf) - 1)) > 0 ) {
 			if ((memcmp(p_buf, buf, rdlen) == 0) && ( uniq == true )) {
 				continue;
 			}
@@ -192,8 +191,8 @@ Restart:
 					j = j>>4;
 					if ( j != i+1 ) {
 						fprintf(stderr, "\nSequence error in buffer!\n");
-							close(fd);
-					       	goto Restart;
+						close(fd);
+					    goto Restart;
 					}
 					buf[i] &= 0x0f;
 				}
@@ -228,7 +227,7 @@ Restart:
 				}
 			}
 		} else {
-			fprintf(stderr, "Error : %s : %s.\n", device, strerror(errno));
+			fprintf(stderr, "Error reading device %s!\n", device));
 			rc = EXIT_FAILURE;
 			break;
 		}
