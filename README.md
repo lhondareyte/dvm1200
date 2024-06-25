@@ -5,23 +5,24 @@ cheap digital multimeter (DM) with usb interface. There are many clones
 from differentes china sources. This utility read data from the DM interface 
 and convert it to CSV format. This can be usefull for generate graphs and so on.
 
-It's an adaptation from Sabin Iacob's DVM1200.py available at [here](https://gist.github.com/m0n5t3r/4543215). 
+This is an adaptation of Sabin Iacob's `DVM1200.py` script, available [here](https://gist.github.com/m0n5t3r/4543215). 
 
-This utility has no dependency and should works on any ***NIX** system with USB support.
+This utility has no dependency and should works on any ***NIX** system.
 
 ## Installation : 
 
 To install the utility, type:
 
-    make && make install
+    git clone https://github.com/lhondareyte/dvm1200.git
+    cd dvm1200 && make && make install
 
 **Warning, you must have permissions to access the serial port.**
 
-See the man page for all the availables options.
+See the man page for all available options.
 
 ## How it works :
 
-The following documentation is mostly taken from Sabin Iacob's dvm1200.py:
+The following documentation is mostly taken from Sabin Iacob script:
 
 The multimeter is as dumb as they come when it comes to PC interfacing, 
 and makes a screen dump to USB (over an IR link) instead of providing proper 
@@ -59,6 +60,8 @@ The DM interface is based on a PL2303 chip from PROLIFIC. The driver is availabl
 with any Linux distributions and all *BSD.
 
 On macOS, you must install the driver from PROLIFIC. Note that this driver can be buggy: I recommend pl2303 driver from REPLEO but it's not free.
+
+For FreeBSD users, a port is [available here](https://github.com/lhondareyte/ports/tree/master/dvm1200).
 
 ## License :
 
