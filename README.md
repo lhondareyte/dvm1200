@@ -34,11 +34,11 @@ The output consists of 15 bytes packet that look like this when converted to hex
 * Each packet end with f1
 * 4 MSB of each byte is a sequence number (`1 to f`) and can be ignored, leaving us with
 
-    b 7 d d b 5 b 7 e 0 0 0 4 0
+      b 7 d d b 5 b 7 e 0 0 0 4 0
 
   Further, these can be grouped like
 
-    b 7d db 5b 7e 00 04 0
+      b 7d db 5b 7e 00 04 0
 
 These encode various things on the screen; in order of appearance:
 
