@@ -28,6 +28,7 @@
 
 extern char d_decode(uint8_t);
 extern void u_decode(uint8_t, uint8_t, uint8_t);
+void get_time(void);
 
 #if defined (__APPLE__)
  #define 	DEFAULT_PORT	"/dev/cu.usbserial"
