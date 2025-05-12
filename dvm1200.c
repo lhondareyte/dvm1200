@@ -31,15 +31,15 @@ extern void u_decode(uint8_t, uint8_t, uint8_t);
 void get_time(void);
 
 #if defined (__APPLE__)
- #define 	DEFAULT_PORT	"/dev/cu.usbserial"
+#define 	DEFAULT_PORT	"/dev/cu.usbserial"
 #elif defined (__FreeBSD__)
- #define 	DEFAULT_PORT	"/dev/cuaU0"
+#define 	DEFAULT_PORT	"/dev/cuaU0"
 #elif defined (__linux__)
- #define 	DEFAULT_PORT	"/dev/ttyUSB0"
+#define 	DEFAULT_PORT	"/dev/ttyUSB0"
 #elif defined (__NetBSD__)
- #define 	DEFAULT_PORT	"/dev/ttyU0"
+#define 	DEFAULT_PORT	"/dev/ttyU0"
 #elif defined (__OpenBSD__)
- #define 	DEFAULT_PORT	"/dev/cuaU0"
+#define 	DEFAULT_PORT	"/dev/cuaU0"
 #endif
 
 struct timeval  tv;
@@ -51,7 +51,7 @@ int	count=0;
 int	fd=0;
 
 static void usage(void) {
-	fprintf ( stderr, "Usage : dvm1200 [-d device] [-c count] [-u]\n");
+	fprintf (stderr, "Usage : dvm1200 [-d device] [-c count] [-u]\n");
 	exit (EXIT_FAILURE);
 }
 
@@ -109,25 +109,26 @@ int main(int argc, char *argv[])
 	opterr = 0;             /* disable getopt() abort message */
 	
 	/* Checking command line options */
-	if ( argc > 1 ) {
+	if (argc > 1) {
 		/* -d device -c maxcount */
-		while (( opt = getopt (argc, argv, "d:c:u" )) != -1 ) {
+		while ((opt = getopt (argc, argv, "d:c:u")) != -1 ) {
 			switch (opt) {
-				case 'd': 
-					device = optarg; 
-					break;
-				case 'c': 
-					if ( ! isdigit(*optarg) ) {
-						fprintf (stderr ,"Error : not a number (%s).\n", optarg);
-						exit (EXIT_FAILURE);
-					}
-					maxcount = atoi(optarg); 
-					break;
-				case 'u':
-					uniq = true;
-					break;
-				default:
-					usage();
+			case 'd': 
+				device = optarg; 
+				break;
+			case 'c': 
+				if (! isdigit(*optarg)) {
+					fprintf (stderr ,"Error : not a number (%s).\n", optarg);
+					exit (EXIT_FAILURE);
+				}
+				maxcount = atoi(optarg); 
+				break;
+			case 'u':
+				uniq = true;
+				break;
+			default:
+				usage();
+				break;
 			}
 		}
 	}
@@ -146,7 +147,7 @@ Restart:
 	}
 
 	/* baudrate 2400 */
-	if ( set_interface_attribs(fd, B2400) < 0 ) {
+	if (set_interface_attribs(fd, B2400) < 0) {
 		rc = EXIT_FAILURE;
 		goto End;
 	}
@@ -157,7 +158,7 @@ Restart:
 	fprintf (stderr, "Waiting the end of last packet... ");
 	while(1) {
 		rdlen = read(fd, buf, sizeof(buf) - 1);
-		if ( rdlen == 1 && buf[0] == 0xf1 ) {
+		if (rdlen == 1 && buf[0] == 0xf1) {
 			fprintf(stderr, "ok\n");
 			break;
 		}
@@ -170,8 +171,8 @@ Restart:
 		rc = EXIT_FAILURE;
 		goto End;
 	}
-	memset ( buf, 0, sizeof buf);
-	memset ( p_buf, 0, sizeof p_buf);
+	memset(buf, 0, sizeof buf);
+	memset(p_buf, 0, sizeof p_buf);
 
 	/* Main loop */
 	while(1) {
@@ -188,10 +189,10 @@ Restart:
 				fprintf(stdout, "%05d , %s ", count, t_buf);
 #endif
 				/* Check buffer consistency and remove MSB */
-				for ( i=0; i< rdlen; i++) {
+				for (i = 0; i< rdlen; i++) {
 					j = buf[i]; 
 					j = j>>4;
-					if ( j != i+1 ) {
+					if (j != i+1) {
 						fprintf(stderr, "\nSequence error in buffer!\n");
 						close(fd);
 					    	goto Restart;
@@ -200,19 +201,19 @@ Restart:
 				}
 				/* Decoding numbers */
 #if defined (__DEBUG_DVM__)
-				for ( i=1; i<15; i+=2 ) {
+				for (i = 1; i < 15; i += 2) {
 					c=(buf[i]<<4)+(buf[i+1]);
 					fprintf(stdout, " %x", c);
 				}
 				fprintf(stdout, " : ");
 #endif
-				for ( i=1; i<9; i+=2 ) {
+				for (i = 1; i < 9; i += 2) {
 					c=(buf[i]<<4)+(buf[i+1]);
 					/* Checking for dot or minus sign */
 					if (bit_is_set(c,4)) {
 						clear_bit(c,4);
 						/* Minus sign at the left */
-						if (i < 3 )
+						if (i < 3)
 							fprintf(stdout, "-%c",d_decode(c));
 						/* Dot sign at the left */ 
 						else fprintf(stdout, ".%c",d_decode(c));
