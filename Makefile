@@ -17,15 +17,17 @@ $(PRG): $(OBJECTS)
 	@$(CC) $(LDFLAGS) $(CFLAGS) $(OBJECTS) -o $@
 	@printf "\tdone.\n"
 
+install:
+	install -m 755 $(PRG) $(BINDIR)
+	gzip -cn $(PRG).1 > $(PRG).1.gz
+	install -m 644 $(PRG).1.gz $(MANDIR)
+
+man:
+	go-md2man < $(PRG).md > $(PRG).1
+
 clean:
 	@rm -f  $(OBJECTS) $(PRG) *~ *gz
 
-man:
-	@gzip -cn $(PRG).1 > $(PRG).1.gz
-
-install: man
-	install -m 755 $(PRG) $(BINDIR)
-	install -m 644 $(PRG).1.gz $(MANDIR)
 .c.o:
 	@printf "Compiling $<:"
 	@$(CC) $(CFLAGS) -Os -c $< -o $@
